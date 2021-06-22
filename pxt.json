@@ -1,7 +1,7 @@
 {
-    "name": "pxt-ESP32-C3-M1",
+    "name": "pxt-ESP32-C3-M2",
     "version": "0.0.1",
-    "description": "MakeCode extension for ESP32-C3-M1",
+    "description": "MakeCode extension for ESP32-C3-M2",
     "dependencies": {
         "core": "*"
     },
