@@ -137,6 +137,24 @@ namespace ESP8266ThingSpeak {
     }
     
     /**
+    * Information received by Wifi
+    */
+    //% block="Information received = %data"
+    //% data.defl=0
+    export function InformationReceived(data: string): string {
+        let target_str: string = "\u000D\u000A" + "+IPD,0,1:" + data + "\u000D\u000A"
+        let received_str: string = serial.readString()
+        let received_result: boolean = false
+        if (received_str == target_str) {
+            received_result = true
+        }
+        else {
+            received_result = false
+        }
+        return target_str
+    }
+        
+    /**
     * Check if ESP8266 successfully uploaded data to ThingSpeak
     */
     //% block="Last data upload successful ?"
