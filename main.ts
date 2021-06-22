@@ -1,7 +1,7 @@
 /**
- * MakeCode extension for ESP8266 Wifi modules and ThinkSpeak website https://thingspeak.com/
+ * MakeCode extension for ESP32-C3-M Wifi modules
  */
-//% color=#009b5b icon="\uf1eb" block="ESP8266 ThingSpeak"
+//% color=#009b5b icon="\uf1eb" block="ESP32-C3-M"
 namespace ESP8266ThingSpeak {
 
     let wifi_connected: boolean = false
@@ -36,12 +36,10 @@ namespace ESP8266ThingSpeak {
     /**
     * Initialize ESP8266 module and connect it to Wifi router
     */
-    //% block="Initialize ESP8266|RX (Tx of micro:bit) %tx|TX (Rx of micro:bit) %rx|Baud rate %baudrate|Wifi SSID = %ssid|Wifi PW = %pw"
+    //% block="Initialize ESP32-C3|RX (Tx of micro:bit) %tx|TX (Rx of micro:bit) %rx|Baud rate %baudrate"
     //% tx.defl=SerialPin.P0
     //% rx.defl=SerialPin.P1
-    //% ssid.defl=your_ssid
-    //% pw.defl=your_pw
-    export function connectWifi(tx: SerialPin, rx: SerialPin, baudrate: BaudRate, ssid: string, pw: string) {
+    export function Initialize(tx: SerialPin, rx: SerialPin, baudrate: BaudRate) {
         wifi_connected = false
         thingspeak_connected = false
         serial.redirect(
@@ -49,14 +47,27 @@ namespace ESP8266ThingSpeak {
             rx,
             baudrate
         )
-        sendAT("AT+RESTORE", 1000) // restore to factory settings
-        sendAT("AT+CWMODE=1") // set to STA mode
-        sendAT("AT+RST", 1000) // reset
+        sendAT("AT+RESTORE", 2000) // restore to factory settings
+        sendAT("AT+CWMODE=1", 1000) // set to STA mode
+        sendAT("ATE0", 1000) // echo off
+        sendAT("AT+CWLAPOPT=1,2,-50,1", 1000) // Set the Configuration for the Command AT+CWLAP
+        sendAT("AT+CWLAP", 0) // List Available APs
+        basic.pause(100)
+    }
+
+    /**
+    * connect it to Wifi router
+    */
+    //% block="connectWifi|Wifi SSID = %ssid|Wifi PW = %pw"
+    //% ssid.defl=ssid
+    //% pw.defl=pw
+    export function connectWifi(ssid: string, pw: string) {
+        wifi_connected = false
         sendAT("AT+CWJAP=\"" + ssid + "\",\"" + pw + "\"", 0) // connect to Wifi router
         wifi_connected = waitResponse()
         basic.pause(100)
     }
-
+    
     /**
     * Connect to ThingSpeak and upload data. It would not upload anything if it failed to connect to Wifi or ThingSpeak.
     */
@@ -88,7 +99,19 @@ namespace ESP8266ThingSpeak {
     export function wait(delay: number) {
         if (delay > 0) basic.pause(delay)
     }
-
+    
+    /**
+    * Configure to AP mode
+    */
+    //% block="Set to AP mode"
+    export function SetApMode() {
+        sendAT("AT+RESTORE", 2000) // restore to factory settings
+        sendAT("AT+CWMODE=3", 1000) // set to STA and AP mode
+        sendAT("AT+RST", 2000) // restart
+        sendAT("AT+CIPMUX=1", 1000) // Start AP multi connection
+        sendAT("AT+CIPSERVER=1,808", 1000) // Set the server port to 808
+    }
+    
     /**
     * Check if ESP8266 successfully connected to Wifi
     */
@@ -104,7 +127,15 @@ namespace ESP8266ThingSpeak {
     export function isThingSpeakConnected() {
         return thingspeak_connected
     }
-
+    
+    /**
+    * Check List of available APs
+    */
+    //% block="List of available APs"
+    export function ListOfAvailableAPs(): string {
+        return serial.readString()
+    }
+    
     /**
     * Check if ESP8266 successfully uploaded data to ThingSpeak
     */
